@@ -1,0 +1,12 @@
+# Encoder: MLP
+encoder:
+  encoder_type: mlp
+  n_layers: 3
+  hidden_dim: 128
+  output_dim: 128
+  platform_embedding_dim: 32
+  share_platform_encoder: false
+  mask_mode: zero_fill
+  dropout: 0.1
+  activation: gelu
+  norm_type: layer

@@ -1,0 +1,131 @@
+{
+  "train_history": [
+    {
+      "total_loss": 2.1253985912829148,
+      "pred_loss": 0.7151832382393176,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.23160833004312437,
+      "disc_loss": 4.6267562914090075,
+      "disc_acc": 0.1019467213114754,
+      "enc_loss": -2.3160832651325913,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.00010356215272891024,
+      "equivariance_factor": 0.0,
+      "epoch": 0,
+      "lr_main": 0.0002,
+      "lr_recovery": 0.0001,
+      "lr_adversarial": 4e-05
+    },
+    {
+      "total_loss": 1.410597206383455,
+      "pred_loss": 0.3737976554720128,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.22089852429315693,
+      "disc_loss": 4.423661147961851,
+      "disc_acc": 0.21413934426229508,
+      "enc_loss": -2.2089852114192774,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.00015317590978305756,
+      "equivariance_factor": 0.0004098360655737705,
+      "epoch": 1,
+      "lr_main": 0.0004,
+      "lr_recovery": 0.0002,
+      "lr_adversarial": 8e-05
+    },
+    {
+      "total_loss": 1.4105204535556621,
+      "pred_loss": 0.3640932538470284,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.22733616993808356,
+      "disc_loss": 4.538825101539737,
+      "disc_acc": 0.13934426229508196,
+      "enc_loss": -2.2733616672578405,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.0001627249385208296,
+      "equivariance_factor": 0.000819672131147541,
+      "epoch": 2,
+      "lr_main": 0.0006000000000000001,
+      "lr_recovery": 0.00030000000000000003,
+      "lr_adversarial": 0.00012000000000000002
+    },
+    {
+      "total_loss": 1.3854496424071123,
+      "pred_loss": 0.35851509859938113,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.22268080051805153,
+      "disc_loss": 4.459008315059005,
+      "disc_acc": 0.14779713114754098,
+      "enc_loss": -2.2268079734239423,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.00018851871018490723,
+      "equivariance_factor": 0.0012295081967213114,
+      "epoch": 3,
+      "lr_main": 0.0008,
+      "lr_recovery": 0.0004,
+      "lr_adversarial": 0.00016
+    },
+    {
+      "total_loss": 1.3531816825270653,
+      "pred_loss": 0.34304800620455234,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.2222154025049483,
+      "disc_loss": 4.445023964174458,
+      "disc_acc": 0.11834016393442623,
+      "enc_loss": -2.2221539919493627,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.00021972968605667596,
+      "equivariance_factor": 0.001639344262295082,
+      "epoch": 4,
+      "lr_main": 0.001,
+      "lr_recovery": 0.0005,
+      "lr_adversarial": 0.0002
+    }
+  ],
+  "val_history": [
+    {
+      "pred_loss": 0.8591479468345642,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.0,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.0001369761727983132,
+      "total_loss": 0.8592849314212799,
+      "epoch": 0
+    },
+    {
+      "pred_loss": 0.970667142868042,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.0,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.0001456804102053866,
+      "total_loss": 0.9708128213882447,
+      "epoch": 1
+    },
+    {
+      "pred_loss": 0.8230196607112884,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.0,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.00017499290290288628,
+      "total_loss": 0.8231946527957916,
+      "epoch": 2
+    },
+    {
+      "pred_loss": 0.6427052068710327,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.0,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.00022213376534637063,
+      "total_loss": 0.6429273414611817,
+      "epoch": 3
+    },
+    {
+      "pred_loss": 0.5796684169769287,
+      "rec_loss": 0.0,
+      "noleak_loss": 0.0,
+      "equiv_loss": 0.0,
+      "complex_loss": 0.0002704190113581717,
+      "total_loss": 0.5799388349056244,
+      "epoch": 4
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# Identifiability Gate: Lookup Table
+gate:
+  r0_method: lookup
+  r0_init: 10.0
+  prior_predictive_type: empirical_bayes
+  prior_mean: 0.0
+  prior_var: 1.0
+  hard_gate: true
+  r0_regressor_hidden: 64

@@ -1,0 +1,23 @@
+﻿cff-version: 1.2.0
+message: "If you use HWIN-Net in your research, please cite it as below."
+title: "HWIN-Net: Hierarchical Water Intelligence Network"
+version: "0.1.0"
+date-released: "2025-07-16"
+authors:
+  - family-names: "HWIN Team"
+    given-names: ""
+    affiliation: "Independent Research"
+repository-code: "https://github.com/Zakariya-Q/hwin-net"
+license: "MIT"
+keywords:
+  - "water quality"
+  - "spatiotemporal prediction"
+  - "heterogeneous platforms"
+  - "equivariant neural networks"
+  - "identifiability"
+  - "uncertainty quantification"
+  - "scientific machine learning"
+references:
+  - type: "software"
+    title: "HWIN-Bench: Benchmark for Water Intelligence Networks"
+    url: "https://github.com/Zakariya-Q/hwin-net"

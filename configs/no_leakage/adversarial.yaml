@@ -1,0 +1,14 @@
+# No-Leakage: Adversarial (DANN/GRL)
+no_leakage:
+  mi_estimator: adversarial
+  discriminator_type: mlp
+  discriminator_hidden: 64
+  discriminator_layers: 2
+  discriminator_dropout: 0.1
+  discriminator_activation: gelu
+  discriminator_norm: layer
+  gradient_reversal: true
+  grl_lambda: 1.0
+  grl_lambda_schedule: constant
+  grl_max_lambda: 10.0
+  lambda_mi: 0.1

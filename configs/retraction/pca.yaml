@@ -1,0 +1,6 @@
+# Manifold Retraction: PCA Projection
+retraction:
+  retraction_type: pca
+  latent_dim: 64
+  manifold_basis_path: null
+  pca_components: 32

@@ -1,0 +1,10 @@
+# Query Head: MLP
+query_head:
+  head_type: mlp
+  latent_dim: 64
+  output_dim: 1
+  hidden_dim: 64
+  n_layers: 2
+  output_distribution: gaussian
+  dropout: 0.1
+  activation: gelu

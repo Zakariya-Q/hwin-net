@@ -1,0 +1,62 @@
+{
+  "title": "Table 3: Theory Validation Predictions (Pre-registered - Untested)",
+  "columns": [
+    "ID",
+    "Prediction",
+    "Test Design",
+    "Success Criterion",
+    "Status"
+  ],
+  "rows": [
+    [
+      "THEO-001",
+      "Gate reduces negative transfer",
+      "Gate-on vs gate-off on OOD schemas",
+      "Error on refused > 2x predicted; NegTransferScore lower with gate",
+      "Untested"
+    ],
+    [
+      "THEO-002",
+      "Hard refusal > forced prediction",
+      "Decision utility comparison",
+      "Hard refusal higher utility, fewer misleading predictions",
+      "Untested"
+    ],
+    [
+      "THEO-003",
+      "No-leakage improves station generalization",
+      "Station ID probe + seen/unseen gap",
+      "Probe ~chance with no-leakage; gap < 0.05",
+      "Untested"
+    ],
+    [
+      "THEO-004",
+      "Equivariant recovery enables cross-platform transfer",
+      "Permutation invariance + held-out platform",
+      "Perm error ~0; cross-platform R2 gap < 0.05",
+      "Untested"
+    ],
+    [
+      "THEO-005",
+      "Uncertainty decomp identifies unidentifiable schemas",
+      "AUROC identifiability uncertainty",
+      "AUROC > 0.9; theory corr > 0.8",
+      "Untested"
+    ],
+    [
+      "THEO-006",
+      "Schema encoder enables zero-shot variable adaptation",
+      "Hold out variables, test compositional",
+      "Zero-shot R2 > 0.5 on compositional",
+      "Untested"
+    ],
+    [
+      "THEO-007",
+      "Manifold retraction preserves latent geometry",
+      "Geodesic preservation vs Euclidean proj",
+      "Geodesic pres > 0.95; boundary distort < 0.1",
+      "Untested"
+    ]
+  ],
+  "note": "All predictions untested - require BENCH-001 + ablations on GPU."
+}

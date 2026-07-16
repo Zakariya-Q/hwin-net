@@ -1,0 +1,116 @@
+﻿# HWIN-Net Dataset with Polars
+import torch
+from torch.utils.data import Dataset
+from typing import Optional, Dict, List, Tuple
+from dataclasses import dataclass
+import json
+import polars as pl
+import numpy as np
+
+@dataclass
+class SchemaAwareSample:
+    x: torch.Tensor
+    M_O: torch.Tensor
+    a_idx: int
+    y: Optional[torch.Tensor] = None
+    schema_id: Optional[str] = None
+
+class HWINSchemaDataset(Dataset):
+    def __init__(self, data_path, schema_path=None, platform_embeddings_path=None, target_column="y", num_variables=100, num_platforms=5, normalize_features=True, feature_mean_path=None, feature_std_path=None, target_transform=None):
+        self.target_column = target_column
+        self.num_variables = num_variables
+        self.num_platforms = num_platforms
+        self.normalize_features = normalize_features
+        self.target_transform = target_transform
+        self.data = pl.read_parquet(data_path) if data_path.endswith(".parquet") else pl.read_csv(data_path)
+        self.x_col_indices = [self.data.columns.index("x_{0}".format(i)) for i in range(num_variables) if "x_{0}".format(i) in self.data.columns]
+        self.m_col_indices = [self.data.columns.index("M_{0}".format(i)) for i in range(num_variables) if "M_{0}".format(i) in self.data.columns]
+        self.target_col_idx = self.data.columns.index(target_column) if target_column in self.data.columns else None
+        self.a_idx_col_idx = self.data.columns.index("a_idx") if "a_idx" in self.data.columns else None
+        self.station_id_col_idx = self.data.columns.index("station_id") if "station_id" in self.data.columns else None
+        self.schemas = json.load(open(schema_path)) if schema_path else None
+        if platform_embeddings_path:
+            if platform_embeddings_path.endswith(".pt"):
+                self.platform_embeddings = torch.load(platform_embeddings_path, map_location="cpu")
+            else:
+                self.platform_embeddings = torch.from_numpy(np.load(platform_embeddings_path))
+        else:
+            self.platform_embeddings = None
+        if feature_mean_path and feature_std_path:
+            if feature_mean_path.endswith(".pt"):
+                self.feature_mean = torch.load(feature_mean_path, map_location="cpu")
+                self.feature_std = torch.load(feature_std_path, map_location="cpu")
+            else:
+                self.feature_mean = torch.from_numpy(np.load(feature_mean_path))
+                self.feature_std = torch.from_numpy(np.load(feature_std_path))
+        else:
+            self.feature_mean = None
+            self.feature_std = None
+        self.valid_indices = list(range(len(self.data)))
+    def __len__(self):
+        return len(self.valid_indices)
+    def __getitem__(self, idx):
+        row = self.data.row(self.valid_indices[idx])
+        x = torch.tensor([float(row[i]) for i in self.x_col_indices], dtype=torch.float32) if self.x_col_indices else torch.zeros(self.num_variables, dtype=torch.float32)
+        M_O = torch.tensor([float(row[i]) for i in self.m_col_indices], dtype=torch.float32) if self.m_col_indices else torch.ones(self.num_variables, dtype=torch.float32)
+        a_idx = int(row[self.a_idx_col_idx]) if self.a_idx_col_idx is not None else 0
+        y = torch.tensor(row[self.target_col_idx], dtype=torch.float32) if self.target_col_idx is not None else None
+        if self.normalize_features and self.feature_mean is not None:
+            x = (x - self.feature_mean) / (self.feature_std + 1e-8)
+        # Apply target transform if specified
+        if self.target_transform == "log1p" and y is not None:
+            y = torch.log1p(y)
+        elif self.target_transform == "log" and y is not None:
+            y = torch.log(y + 1e-8)
+        return {"x": x, "M_O": M_O, "a_idx": torch.tensor(a_idx, dtype=torch.long), "y": y}
+    def inverse_target_transform(self, y_transformed):
+        """Inverse transform for evaluation metrics on original scale"""
+        if self.target_transform is None:
+            return y_transformed
+        if self.target_transform == "log1p":
+            return torch.expm1(y_transformed)
+        elif self.target_transform == "log":
+            return torch.exp(y_transformed)
+        return y_transformed
+    def get_schema_distribution(self):
+        if self.schemas is None: return {}
+        dist = {}
+        for idx in self.valid_indices:
+            row = self.data.row(idx)
+            MOvals = [bool(row[i]) for i in self.m_col_indices] if self.m_col_indices else []
+            obs = tuple(sorted([i for i, m in enumerate(MOvals) if m]))
+            a_idx = int(row[self.a_idx_col_idx]) if self.a_idx_col_idx is not None else 0
+            key = "O={0}_a={1}".format(obs, a_idx)
+            dist[key] = dist.get(key, 0) + 1
+        return dist
+    def get_station_ids(self):
+        if self.station_id_col_idx is None: return ["unknown_{0}".format(i) for i in range(len(self))]
+        return [str(self.data.row(idx)[self.station_id_col_idx]) for idx in self.valid_indices]
+    def get_platform_indices(self):
+        if self.a_idx_col_idx is None: return [0] * len(self)
+        return [int(self.data.row(idx)[self.a_idx_col_idx]) for idx in self.valid_indices]
+    def set_valid_indices(self, indices):
+        self.valid_indices = indices
+    def get_num_variables(self): return self.num_variables
+    def get_num_platforms(self): return self.num_platforms
+
+def create_hwin_dataset(config, split="train"):
+    if split == "train": data_path = config.data.train_data_path
+    elif split == "val": data_path = config.data.val_data_path
+    else: data_path = config.data.test_data_path
+    target_transform = None
+    if hasattr(config, 'target_transform') and config.target_transform.enabled:
+        target_transform = config.target_transform.type
+    return HWINSchemaDataset(data_path=data_path, schema_path=config.data.schemas_file, platform_embeddings_path=config.data.platform_embeddings_file, target_column=config.data.target_column, num_variables=config.data.num_variables, num_platforms=config.data.num_platforms, normalize_features=config.data.normalize_features, feature_mean_path=config.data.feature_mean_path, feature_std_path=config.data.feature_std_path, target_transform=target_transform)
+
+def collate_fn(batch):
+    x = torch.stack([item["x"] for item in batch])
+    M_O = torch.stack([item["M_O"] for item in batch])
+    a_idx = torch.stack([item["a_idx"] for item in batch])
+    y_list = [item["y"] for item in batch]
+    if y_list[0] is not None:
+        y = torch.stack(y_list)
+    else:
+        y = None
+    return {"x": x, "M_O": M_O, "a_idx": a_idx, "y": y}
+

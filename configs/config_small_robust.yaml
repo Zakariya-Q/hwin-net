@@ -1,0 +1,136 @@
+data:
+  feature_mean_path: C:/Users/lenovo/hwin_net/data/stats/feature_mean.pt
+  feature_std_path: C:/Users/lenovo/hwin_net/data/stats/feature_std.pt
+  min_observed_vars: 1
+  normalize_features: true
+  num_platforms: 5
+  num_variables: 100
+  platform_embeddings_file: null
+  schema_sampler_type: none
+  schemas: []
+  schemas_file: null
+  target_column: y
+  target_type: regression
+  test_data_path: C:/Users/lenovo/hwin_net/data/test_small.parquet
+  train_data_path: C:/Users/lenovo/hwin_net/data/train_small.parquet
+  val_data_path: C:/Users/lenovo/hwin_net/data/val_small.parquet
+encoder:
+  activation: gelu
+  dropout: 0.1
+  encoder_type: mlp
+  hidden_dim: 128
+  mask_mode: zero_fill
+  n_layers: 3
+  norm_type: layer
+  num_platforms: 5
+  output_dim: 128
+  platform_embedding_dim: 32
+  share_platform_encoder: false
+experiment_name: hwin_net
+gate:
+  hard_gate: true
+  prior_mean: 0.0
+  prior_predictive_type: empirical_bayes
+  prior_var: 1.0
+  r0_init: 2.5
+  r0_method: regressor
+  r0_regressor_hidden: 64
+log_level: info
+loss:
+  equiv_loss_type: frobenius
+  lambda_complex: 0.0001
+  lambda_equiv: 0.1
+  lambda_noleak: 0.1
+  lambda_pred: 1.0
+  lambda_rec: 1.0
+  pred_loss_type: mse
+  rec_loss_type: mse
+no_leakage:
+  discriminator_activation: gelu
+  discriminator_dropout: 0.1
+  discriminator_hidden: 64
+  discriminator_layers: 2
+  discriminator_norm: layer
+  discriminator_type: mlp
+  gradient_reversal: true
+  grl_lambda: 1.0
+  grl_lambda_schedule: constant
+  grl_max_lambda: 10.0
+  lambda_mi: 0.1
+  mi_estimator: adversarial
+output_dir: ./outputs
+query_head:
+  activation: gelu
+  dropout: 0.1
+  head_type: mlp
+  hidden_dim: 64
+  latent_dim: 64
+  n_layers: 2
+  output_dim: 1
+  output_distribution: gaussian
+recovery:
+  activation: gelu
+  base_platform: 0
+  dropout: 0.1
+  equivariance_loss_weight: 1.0
+  hidden_dim: 128
+  intertwiner_type: linear
+  latent_dim: 64
+  n_layers: 3
+  norm_type: layer
+  recovery_type: equivariant_mlp
+  tie_t_base: true
+retraction:
+  idempotence_loss_weight: 1.0
+  latent_dim: 64
+  manifold_basis_path: C:/Users/lenovo/hwin_net/data/stats/pca_basis.pt
+  max_iter: 10
+  pca_components: 32
+  retraction_type: pca
+  tolerance: 1e-6
+  vae_decoder_layers:
+  - 64
+  - 128
+  vae_encoder_layers:
+  - 128
+  - 64
+  vae_latent_dim: 16
+target_transform:
+  enabled: true
+  type: log1p
+training:
+  batch_size: 8
+  beta1: 0.9
+  beta2: 0.999
+  checkpoint_dir: ./checkpoints
+  deterministic: true
+  device: auto
+  early_stopping_metric: total_loss
+  early_stopping_mode: min
+  early_stopping_patience: 3
+  eps: 1e-8
+  equivariance_warmup_epochs: 10
+  gamma: 0.1
+  grad_clip_norm: 1.0
+  keep_last_n_checkpoints: 3
+  lr_adversarial: 0.0002
+  lr_main: 0.001
+  lr_recovery: 0.0005
+  max_epochs: 5
+  min_lr: 1e-6
+  num_workers: 0
+  optimizer_type: adamw
+  pin_memory: true
+  plateau_factor: 0.5
+  plateau_patience: 10
+  resume_from: null
+  save_every_n_epochs: 10
+  scheduler_type: cosine
+  seed: 42
+  step_size: 30
+  use_mixed_precision: false
+  use_ttur: true
+  val_batch_size: 32
+  validate_every_n_epochs: 1
+  warmup_epochs: 5
+  weight_decay: 0.0001

@@ -1,0 +1,19 @@
+# HWIN-Net Hydra Configuration
+# Usage: python train.py +experiment=base
+
+defaults:
+  - _self_
+  - encoder: mlp
+  - recovery: equivariant_mlp
+  - retraction: pca
+  - query_head: mlp
+  - gate: lookup
+  - no_leakage: adversarial
+  - loss: default
+  - training: default
+  - data: default
+
+# Experiment name
+experiment_name: hwin_net
+output_dir: ./outputs
+log_level: info

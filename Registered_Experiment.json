@@ -1,0 +1,71 @@
+{
+  "registration_date": "2026-07-15T09:48:32.836633",
+  "phase": "XXIII - Registered Benchmark Campaign",
+  "config_hash": "b64fbec4d21b34d99b78f2d6f73a3cfcedd331c897573243eaeee2a32cbeb21d",
+  "model_hash": "ffb95ee64038c320",
+  "training_hash": "44f3a35d5f441a8a",
+  "dataset_hash": "bd5036cc5eefff6f",
+  "losses_hash": "3a12bcec9a35c174",
+  "utils_hash": "ba3a388d9270cbe3",
+  "data_hashes": {
+    "train.parquet": "357b1dc7c3d76c677e36cbf60ac0dc24bab949211495959320175f8342b0a237",
+    "val.parquet": "da4530cbd9baabf9d05ddb2366cada946f47962a9f0e43f77ca561e76df6ff29",
+    "test.parquet": "1cccedd07b7d46c9dcbe5d8b80f016bc72e4c06107c67fcbdaa1cba0f03bbf0a"
+  },
+  "stats_hashes": {
+    "feature_mean.pt": "7ff1762b4295ba0353ecd77fcf2052dab31d18b19208ec846b64195320be868b",
+    "feature_std.pt": "a8c15e4455f717afedf7c9a63e2949c1cd83d4496a07984267ea06adf70c0085",
+    "pca_basis.pt": "009f11016b02ab0a03982e9a185104a45b028f6334c798c3b6a02923eaade8e9",
+    "feature_columns.txt": "f2c12797a38cd565804e5ddfce16eabb06646c2391916946814b4d94ed889e06"
+  },
+  "seeds": [
+    42,
+    123,
+    456,
+    789,
+    999
+  ],
+  "environment": {
+    "python": "3.13.3",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.2",
+    "polars": "1.42.1",
+    "pandas": "2.3.2",
+    "sklearn": "1.7.2",
+    "xgboost": "3.3.0",
+    "lightgbm": "4.6.0",
+    "catboost": "1.2.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_count": 8,
+    "cuda_available": false
+  },
+  "hardware": "CPU-only (Intel/AMD, 8 cores, system RAM)",
+  "key_config": {
+    "num_variables": 100,
+    "num_platforms": 5,
+    "encoder_output_dim": 128,
+    "recovery_latent_dim": 64,
+    "retraction_pca_components": 32,
+    "gate_hard_gate": true,
+    "gate_r0_method": "regressor",
+    "gate_r0_init": 2.5,
+    "batch_size": 32,
+    "val_batch_size": 64,
+    "max_epochs": 100,
+    "early_stopping_patience": 20,
+    "learning_rates": {
+      "main": 0.001,
+      "recovery": 0.0005,
+      "adversarial": 0.0002
+    },
+    "loss_weights": {
+      "pred": 1.0,
+      "rec": 1.0,
+      "noleak": 0.1,
+      "equiv": 0.1,
+      "complex": 0.0001,
+      "idempotence": 1.0
+    },
+    "equivariance_warmup_epochs": 10
+  }
+}

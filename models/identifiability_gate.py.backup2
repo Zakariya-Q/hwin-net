@@ -1,0 +1,212 @@
+"""HWIN-Net: Module 5 - Identifiability Gate - FIXED VERSION"""
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from typing import Optional
+from dataclasses import dataclass, field
+
+@dataclass
+class GateConfig:
+    r0_method: str = "regressor"
+    r0_init: float = 4.0
+    prior_predictive_type: str = "empirical_bayes"
+    prior_mean: float = 0.0
+    prior_var: float = 1.0
+    hard_gate: bool = True
+    schemas: list = field(default_factory=list)
+    num_platforms: int = 5
+    r0_regressor_hidden: int = 64
+    temperature: float = 2.0
+    use_soft_gate_training: bool = True
+
+class IdentifiabilityGate(nn.Module):
+    def __init__(self, config: GateConfig):
+        super().__init__()
+        self.config = config
+        self.r0_method = config.r0_method
+        self.hard_gate = config.hard_gate
+        self.prior_predictive_type = config.prior_predictive_type
+        self.prior_mean = config.prior_mean
+        self.prior_var = config.prior_var
+        self.num_platforms = config.num_platforms
+        self.temperature = config.temperature
+        self.use_soft_gate_training = config.use_soft_gate_training
+
+        if config.r0_method == "lookup":
+            max_vars = 100
+            self.register_buffer("r0_table", torch.full((max_vars, config.num_platforms), config.r0_init))
+        elif config.r0_method == "regressor":
+            self.r0_regressor = nn.Sequential(
+                nn.Linear(config.num_platforms + 1, config.r0_regressor_hidden),
+                nn.GELU(),
+                nn.Linear(config.r0_regressor_hidden, 1)
+            )
+            with torch.no_grad():
+                self.r0_regressor[-1].bias.fill_(config.r0_init)
+        else:
+            # r0_method == "fixed": use constant r0_init
+            self.register_buffer("r0_fixed", torch.tensor(config.r0_init))
+        
+        # Prior predictive network for empirical Bayes
+        if config.prior_predictive_type == "empirical_bayes":
+            self.prior_net = nn.Sequential(
+                nn.Linear(config.num_platforms + 1, config.r0_regressor_hidden),
+                nn.GELU(),
+                nn.Linear(config.r0_regressor_hidden, 2)  # mean, log_var
+            )
+        
+        # Gate network for soft gate (differentiable)
+        self.gate_net = nn.Sequential(
+            nn.Linear(config.num_platforms + 2, config.r0_regressor_hidden),
+            nn.GELU(),
+            nn.Linear(config.r0_regressor_hidden, 1)
+        )
+    
+    def compute_r0(self, M_O: torch.Tensor, a_idx: torch.Tensor) -> torch.Tensor:
+        """Compute identifiability threshold r0(schema, platform).
+        
+        Args:
+            M_O: Observation mask [B, n_vars]
+            a_idx: Platform index [B]
+        
+        Returns:
+            r0 values [B]
+        """
+        B = M_O.shape[0]
+        n_obs = M_O.sum(dim=1).float()  # [B]
+        platform_onehot = F.one_hot(a_idx, num_classes=self.num_platforms).float()  # [B, n_platforms]
+        schema_features = torch.cat([n_obs.unsqueeze(1), platform_onehot], dim=1)  # [B, n_platforms + 1]
+        
+        if self.r0_method == "lookup":
+            # Average r0 across observed variables
+            # Simple approximation: use mean over platforms
+            r0_vals = self.r0_table.mean(dim=0)[a_idx]  # [B]
+        elif self.r0_method == "regressor":
+            r0_vals = self.r0_regressor(schema_features).squeeze(-1)  # [B]
+        else:  # "fixed"
+            r0_vals = self.r0_fixed.expand(B)
+        
+        return F.softplus(r0_vals)  # Ensure positive
+    
+    def compute_prior(self, M_O: torch.Tensor, a_idx: torch.Tensor) -> tuple:
+        """Compute prior predictive distribution p(y | schema, platform).
+        
+        Returns:
+            q_prior: prior mean [B]
+            sigma2_prior: prior variance [B]
+        """
+        B = M_O.shape[0]
+        n_obs = M_O.sum(dim=1).float()
+        platform_onehot = F.one_hot(a_idx, num_classes=self.num_platforms).float()
+        schema_features = torch.cat([n_obs.unsqueeze(1), platform_onehot], dim=1)
+        
+        if self.prior_predictive_type == "empirical_bayes":
+            prior_out = self.prior_net(schema_features)  # [B, 2]
+            q_prior = prior_out[:, 0]
+            sigma2_prior = F.softplus(prior_out[:, 1]) + 1e-6
+        else:  # fixed prior
+            q_prior = torch.full((B,), self.prior_mean, device=M_O.device)
+            sigma2_prior = torch.full((B,), self.prior_var, device=M_O.device)
+        
+        return q_prior, sigma2_prior
+    
+    def gate(self, r0_vals: torch.Tensor, M_O: torch.Tensor, a_idx: torch.Tensor, training: bool = True) -> torch.Tensor:
+        """Compute gate values (soft during training, hard during inference).
+        
+        Args:
+            r0_vals: identifiability thresholds [B]
+            M_O: observation mask [B, n_vars]
+            a_idx: platform index [B]
+            training: if True, use soft gate for gradient flow
+        
+        Returns:
+            gate values in [0, 1] [B]
+        """
+        n_obs = M_O.sum(dim=1).float()  # [B]
+        platform_onehot = F.one_hot(a_idx, num_classes=self.num_platforms).float()
+        gate_features = torch.cat([n_obs.unsqueeze(1), platform_onehot, r0_vals.unsqueeze(1)], dim=1)
+        
+        gate_logits = self.gate_net(gate_features).squeeze(-1) / self.temperature  # [B]
+        
+        if training and self.use_soft_gate_training:
+            # Soft gate: sigmoid for gradient flow to r0_regressor
+            gate_vals = torch.sigmoid(gate_logits)
+        else:
+            # Hard gate: step function (inference)
+            gate_vals = (gate_logits > 0).float()
+        
+        return gate_vals
+    
+    def forward(
+        self,
+        M_O: torch.Tensor,
+        a_idx: torch.Tensor,
+        mu_final: torch.Tensor,
+        z_g: torch.Tensor,
+        training: bool = True
+    ) -> tuple:
+        """Full forward pass of identifiability gate.
+        
+        Returns:
+            routed: gate decisions [B] (0=refuse, 1=predict)
+            r0_vals: identifiability thresholds [B]
+            q_prior: prior mean [B]
+            sigma2_prior: prior variance [B]
+            sigma2_nonid: non-identifiability uncertainty [B]
+        """
+        r0_vals = self.compute_r0(M_O, a_idx)
+        q_prior, sigma2_prior = self.compute_prior(M_O, a_idx)
+        gate_vals = self.gate(r0_vals, M_O, a_idx, training)
+        
+        # Non-identifiability uncertainty: ||M_O||_0 < r0 => high uncertainty
+        # sigma2_nonid is large when schema is not identifiable
+        sigma2_nonid = (1.0 - gate_vals) * sigma2_prior
+        
+        return gate_vals, r0_vals, q_prior, sigma2_prior, sigma2_nonid
+    
+    def route(
+        self,
+        M_O: torch.Tensor,
+        a_idx: torch.Tensor,
+        q_hat: torch.Tensor,
+        sigma2_aleat: torch.Tensor,
+        sigma2_epi: Optional[torch.Tensor] = None
+    ) -> tuple:
+        """Route prediction through identifiability gate.
+        
+        Hard routing (inference) or soft routing (training with use_soft_gate_training).
+        
+        Returns:
+            routed: 1=predict, 0=refuse [B]
+            q_out: final prediction [B]
+            sigma2_total: total predictive variance [B]
+            sigma2_aleat_out: aleatoric variance [B]
+            sigma2_nonid_out: non-identifiability variance [B]
+        """
+        B = M_O.shape[0]
+        device = M_O.device
+        
+        # Get gate decision
+        r0_vals = self.compute_r0(M_O, a_idx)
+        gate_vals = self.gate(r0_vals, M_O, a_idx, training=False)  # Always hard for routing
+        
+        # Prior for refused predictions
+        q_prior, sigma2_prior = self.compute_prior(M_O, a_idx)
+        
+        # Compute non-identifiability uncertainty
+        sigma2_nonid = (1.0 - gate_vals) * sigma2_prior
+        
+        # Total variance
+        if sigma2_epi is not None:
+            sigma2_total = sigma2_aleat + sigma2_epi + sigma2_nonid
+        else:
+            sigma2_total = sigma2_aleat + sigma2_nonid
+        
+        # Route: where gate=1 use q_hat, where gate=0 use q_prior
+        q_out = gate_vals * q_hat + (1.0 - gate_vals) * q_prior
+        
+        # For refused samples, we use prior variance
+        sigma2_aleat_out = sigma2_aleat * gate_vals + sigma2_prior * (1.0 - gate_vals)
+        sigma2_nonid_out = sigma2_nonid
+        
+        return gate_vals, q_out, sigma2_total, sigma2_aleat_out, sigma2_nonid_out

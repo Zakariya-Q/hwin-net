@@ -1,0 +1,62 @@
+{
+  "title": "Table 5: Calibration & Uncertainty Metrics (Pre-registered - Untested)",
+  "columns": [
+    "Metric",
+    "HWIN-Net Target",
+    "Method",
+    "Best Baseline Target",
+    "Status"
+  ],
+  "rows": [
+    [
+      "ECE (Expected Calibration Error)",
+      "< 0.05",
+      "Structured uncertainty decomposition",
+      "< 0.10 (post-hoc calibrated)",
+      "Untested"
+    ],
+    [
+      "NLL (Negative Log-Likelihood)",
+      "Lowest",
+      "Aleatoric + epistemic + identifiability",
+      "Second lowest among baselines",
+      "Untested"
+    ],
+    [
+      "Coverage 95%",
+      "94-96%",
+      "Prediction intervals from full uncertainty",
+      "90-98% (often miscalibrated)",
+      "Untested"
+    ],
+    [
+      "OOD AUROC",
+      "> 0.9",
+      "Epistemic + identifiability components",
+      "0.7-0.85",
+      "Untested"
+    ],
+    [
+      "OOD AUPRC",
+      "> 0.8",
+      "Same",
+      "0.5-0.7",
+      "Untested"
+    ],
+    [
+      "FPR95",
+      "< 0.1",
+      "Same",
+      "0.2-0.5",
+      "Untested"
+    ],
+    [
+      "Identifiability AUROC",
+      "> 0.9",
+      "Ground truth unidentifiable schemas",
+      "N/A (HWIN-Net unique)",
+      "Untested"
+    ]
+  ],
+  "note": "All calibration metrics untested - require BENCH-001 completion."
+}
